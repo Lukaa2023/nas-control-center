@@ -121,7 +121,7 @@ function updateNetworkFields(data) {
   setMiniStatus('lan-status', linkUp ? 'good' : 'bad', linkUp ? 'Connected' : 'Disconnected');
   setMiniStatus('network-link-status', linkUp ? 'good' : 'bad', linkUp ? 'Connected' : 'Disconnected');
   setMiniStatus('gateway-health', gateway.reachable === true ? 'good' : gateway.reachable === false ? 'bad' : 'warn', gateway.reachable === true ? 'Reachable' : gateway.reachable === false ? 'Offline' : 'Unknown');
-  setMiniStatus('internet-health', internet.reachable === true ? 'good' : internet.reachable === false ? 'bad' : 'warn', internet.reachable === true ? 'Online' : internet.reachable === false ? 'bad' : 'Unknown');
+  setMiniStatus('internet-health', internet.reachable === true ? 'good' : internet.reachable === false ? 'bad' : 'warn', internet.reachable === true ? 'Online' : internet.reachable === false ? 'Offline' : 'Unknown');
   setMiniStatus('tailscale-health', tailscale.connected === true ? 'good' : tailscale.connected === false ? 'bad' : 'warn', tailscale.connected === true ? 'Connected' : tailscale.connected === false ? 'Disconnected' : 'Unknown');
   setMiniStatus('tailscale-status', tailscale.connected === true ? 'good' : tailscale.connected === false ? 'bad' : 'warn', tailscale.connected === true ? 'Connected' : tailscale.connected === false ? 'Disconnected' : 'Unknown');
   setText('internet-status', internet.reachable === true ? 'Internet online' : internet.reachable === false ? 'Internet offline' : 'Internet unknown');
@@ -137,7 +137,16 @@ async function updateNetworkStats() {
     const fresh = isFresh(data.updated_at, 60000);
     setText('network-updated', 'Updated ' + formatTime(data.updated_at));
     setStatus('network-overall-status', fresh ? 'good' : 'stale', fresh ? 'Network monitor live' : 'Network data stale');
-    if (!fresh) setMiniStatus('network-link-status', 'warn', 'Data stale');
+    if (!fresh) {
+      setMiniStatus('network-link-status', 'warn', 'Data stale');
+      setMiniStatus('lan-status', 'warn', 'Data stale');
+      setMiniStatus('tailscale-status', 'warn', 'Data stale');
+      setMiniStatus('gateway-health', 'warn', 'Data stale');
+      setMiniStatus('internet-health', 'warn', 'Data stale');
+      setMiniStatus('tailscale-health', 'warn', 'Data stale');
+      setText('network-signal', 'Stale');
+      setText('internet-status', 'Network data stale');
+    }
   } catch (error) {
     console.warn('Network monitor unavailable:', error);
     setText('network-updated', 'Network monitor not installed');
