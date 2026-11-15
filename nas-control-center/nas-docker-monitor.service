@@ -1,0 +1,8 @@
+[Unit]
+Description=NAS Docker Monitoring Snapshot
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/bin/nas-docker-monitor.py

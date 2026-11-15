@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#e7c6ff">
+  <title>NAS Control Center</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script defer src="js/app.js"></script>
+</head>
+
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <a class="brand" href="index.html"><span class="brand-mark">N</span><span>NAS Control Center<small>Vuky’s home
+            server</small></span></a>
+      <nav class="nav">
+        <a class="active" href="index.html"><span>⌂</span> Overview</a>
+        <a href="services.html"><span>▦</span> Services</a>
+        <a href="network.html"><span>⌁</span> Network access</a>
+        <a href="ports.html"><span>↗</span> Port reference</a>
+      </nav>
+      <div class="sidebar-note">
+        <span class="eyebrow">QUICK TIP</span>
+        <p>For remote access, connect to Tailscale first.</p>
+      </div>
+      <div class="sidebar-footer">Personal dashboard · v1.0</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div><span class="eyebrow">HOME SERVER</span>
+          <h1>Overview</h1>
+        </div>
+        <span class="status-pill"><i></i> Last-known online</span>
+      </header>
+
+      <section class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow">YOUR SERVER AT A GLANCE</span>
+          <h2>Everything in<br><em>one place.</em></h2>
+          <p>Shortcuts, connection details and useful commands for your NAS.</p>
+          <a class="button button-dark" href="services.html">Explore services <span>↗</span></a>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="orb orb-one"></div>
+          <div class="orb orb-two"></div>
+          <div class="server-illustration">
+            <div class="server-light"></div>
+            <div class="server-line"></div>
+            <div class="server-line short"></div>
+            <div class="server-drive"></div>
+            <div class="server-drive"></div>
+          </div>
+          <span class="art-caption">NAS / 01</span>
+        </div>
+      </section>
+
+      <section class="section-heading">
+        <div>
+          <span class="eyebrow">LIVE SYSTEM STATUS</span>
+          <h2>Your NAS right now</h2>
+        </div>
+        <span class="muted" id="last-updated">Waiting for data...</span>
+      </section>
+
+      <div class="grid metrics-grid">
+        <article class="card metric-card">
+          <div class="metric-heading">
+            <span class="icon-tile lavender">⌁</span>
+            <span class="tag">PROCESSOR</span>
+          </div>
+          <h3 id="cpu-value">--%</h3>
+          <p class="muted">CPU usage</p>
+          <div class="usage-track">
+            <div id="cpu-bar" class="usage-fill lavender-fill"></div>
+          </div>
+          <small id="cpu-load">Load average: --</small>
+        </article>
+
+        <article class="card metric-card">
+          <div class="metric-heading">
+            <span class="icon-tile pink">▤</span>
+            <span class="tag">MEMORY</span>
+          </div>
+          <h3 id="memory-value">--%</h3>
+          <p class="muted">RAM usage</p>
+          <div class="usage-track">
+            <div id="memory-bar" class="usage-fill pink-fill"></div>
+          </div>
+          <small id="memory-detail">-- / --</small>
+        </article>
+
+        <article class="card metric-card">
+          <div class="metric-heading">
+            <span class="icon-tile peach">▰</span>
+            <span class="tag">STORAGE</span>
+          </div>
+          <h3 id="disk-value">--%</h3>
+          <p class="muted">NAS disk usage</p>
+          <div class="usage-track">
+            <div id="disk-bar" class="usage-fill peach-fill"></div>
+          </div>
+          <small id="disk-detail">-- / --</small>
+        </article>
+
+        <article class="card metric-card">
+          <div class="metric-heading">
+            <span class="icon-tile mint">◷</span>
+            <span class="tag">UPTIME</span>
+          </div>
+          <h3 id="uptime-value">--</h3>
+          <p class="muted">Time since last boot</p>
+          <small id="hostname-value">Host: --</small>
+        </article>
+      </div>
+
+
+      <!-- Docker container monitoring -->
+      <section class="section-heading">
+        <div>
+          <span class="eyebrow">CONTAINER STATUS</span>
+          <h2>Docker services</h2>
+        </div>
+        <span class="muted" id="docker-updated">Waiting for data...</span>
+      </section>
+
+      <div class="card docker-panel">
+        <div class="docker-summary">
+          <div>
+            <h3 id="docker-summary">Loading containers...</h3>
+            <p class="muted">Container overview</p>
+          </div>
+          <span class="tag">DOCKER</span>
+        </div>
+
+        <div id="docker-container-list" class="docker-container-list">
+          <p class="muted">Loading container status...</p>
+        </div>
+      </div>
+
+
+      <section class="section-heading">
+        <div><span class="eyebrow">CONNECTIONS</span>
+          <h2>Reach your NAS</h2>
+        </div><a class="text-link" href="network.html">Network details ↗</a>
+      </section>
+      <div class="grid two">
+        <article class="card connection-card">
+          <div class="card-top"><span class="icon-tile lavender">⌂</span><span class="tag">LOCAL NETWORK</span></div>
+          <h3>At home</h3>
+          <p class="muted">Connect while you're on the same home network.</p>
+          <div class="address-row"><code>192.168.100.7</code><button class="copy" data-copy="192.168.100.7"
+              aria-label="Copy local IP">Copy</button></div>
+          <div class="mini-links"><a href="https://192.168.100.7:9090" target="_blank" rel="noopener">Cockpit</a><a
+              href="http://192.168.100.7:8080" target="_blank" rel="noopener">VukyWeb</a><a
+              href="https://192.168.100.7:9443" target="_blank" rel="noopener">Portainer</a></div>
+        </article>
+        <article class="card connection-card">
+          <div class="card-top"><span class="icon-tile pink">⌁</span><span class="tag">TAILSCALE</span></div>
+          <h3>From anywhere</h3>
+          <p class="muted">Connect to your tailnet on the device you're using.</p>
+          <div class="address-row"><code>100.76.132.23</code><button class="copy" data-copy="100.76.132.23"
+              aria-label="Copy Tailscale IP">Copy</button></div>
+          <div class="mini-links"><a href="https://100.76.132.23:9090" target="_blank" rel="noopener">Cockpit</a><a
+              href="http://100.76.132.23:9091" target="_blank" rel="noopener">Transmission</a><a
+              href="https://100.76.132.23:9443" target="_blank" rel="noopener">Portainer</a></div>
+        </article>
+      </div>
+
+      <section class="section-heading">
+        <div><span class="eyebrow">SHORTCUTS</span>
+          <h2>Frequently used</h2>
+        </div><a class="text-link" href="services.html">All services ↗</a>
+      </section>
+      <div class="grid three">
+        <a class="service-card" href="https://192.168.100.7:9090" target="_blank" rel="noopener"><span
+            class="service-icon lavender">⌘</span>
+          <h3>Cockpit</h3>
+          <p>Server administration</p><span class="card-arrow">↗</span>
+        </a>
+        <a class="service-card" href="http://192.168.100.7:8080" target="_blank" rel="noopener"><span
+            class="service-icon peach">◎</span>
+          <h3>VukyWeb</h3>
+          <p>Website</p><span class="card-arrow">↗</span>
+        </a>
+        <a class="service-card" href="https://192.168.100.7:9443" target="_blank" rel="noopener"><span
+            class="service-icon mint">▣</span>
+          <h3>Portainer</h3>
+          <p>Docker management</p><span class="card-arrow">↗</span>
+        </a>
+      </div>
+
+      <section class="notice"><span class="notice-icon">i</span>
+        <div><strong>Access note</strong>
+          <p>This is a static shortcut dashboard, not a live monitor. The IP addresses and ports are based on your
+            latest terminal output and may change if your network configuration changes.</p>
+        </div>
+      </section>
+      <footer>Made for your home server <span>·</span> Keep it local, keep it yours.</footer>
+    </main>
+  </div>
+</body>
+
+</html>
