@@ -1,57 +1,105 @@
-NAS CONTROL CENTER
-==================
+NAS CONTROL CENTER · V3.0
+==========================
 
-A responsive, multi-page dashboard for your private home NAS.
+A responsive, multi-page dashboard for your home NAS. Near-black surfaces,
+white typography, flat line icons and restrained status colours.
 
 PAGES
 -----
-index.html      Overview, live system metrics, Docker status and shortcuts
-services.html   Service links and SSH / SMB access
-network.html    Local and Tailscale connection details and diagnostics
-ports.html      Port reference based on the latest supplied listener output
-css/style.css   Shared responsive dark interface
-js/app.js       Live JSON monitoring, container rendering and copy controls
+index.html       Overview, live host metrics, network health and Docker status
+services.html    Local, Tailscale and public service links
+network.html     Live interface, Wi-Fi, gateway, internet and Tailscale status
+ports.html       Port reference and exposure guidance
+css/style.css    Shared responsive design system
+js/app.js        Live JSON polling, status rendering and copy controls
 
-LIVE MONITORING
----------------
-The Overview page reads two JSON snapshots from the same protected directory:
-  data/stats.json    Host CPU, memory, storage, uptime and hostname
-  data/docker.json   Docker container list, state, image, ports and health status
+LIVE DATA
+---------
+The browser reads JSON snapshots from the protected dashboard data directory:
 
-The browser does not execute shell commands. Separate Python scripts and
-systemd timers on the NAS generate these snapshots. Keep those scripts and
-timers installed and running for live data to update.
+  data/stats.json      CPU, memory, storage, uptime and hostname
+  data/docker.json     Docker container list and health
+  data/network.json    Active interface, Wi-Fi signal, gateway, internet and Tailscale
+
+Keep the existing nas-monitor and nas-docker-monitor scripts and timers enabled.
+This release adds an optional network monitor described below.
+
+NETWORK MONITOR INSTALLATION
+----------------------------
+The included network-monitor.py runs as the unprivileged user "vuky". It reads
+network state using ip, nmcli, iw, ping and tailscale, then writes one JSON file.
+It does not change network configuration, restart services, or expose ports.
+
+Copy the script and systemd units to the NAS:
+
+  sudo install -m 755 network-monitor.py /usr/local/bin/nas-network-monitor.py
+  sudo install -m 644 systemd/nas-network-monitor.service /etc/systemd/system/
+  sudo install -m 644 systemd/nas-network-monitor.timer /etc/systemd/system/
+
+Enable and run the timer:
+
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now nas-network-monitor.timer
+  sudo systemctl start nas-network-monitor.service
+
+Check the output:
+
+  cat /srv/nas/websites/vukyweb/nas/data/network.json
+  systemctl status nas-network-monitor.timer
+  journalctl -u nas-network-monitor.service -n 30 --no-pager
+
+The Wi-Fi signal field uses "iw dev <interface> link". If iw is not installed,
+the dashboard will still show interface, gateway, internet and Tailscale status;
+the signal and SSID fields will simply be unavailable. Install iw only if you
+want those two extra values.
 
 DEPLOYMENT
 ----------
-Copy the four HTML files to the NAS dashboard directory, then copy the css and
-js directories into that same directory. Preserve the NAS-side .htaccess,
-.htpasswd and data directory. Do not overwrite those with repository copies.
+The repository folder is nas-control-center-redesign. Copy its four HTML files,
+css/style.css and js/app.js into:
 
-Example target directory:
   /srv/nas/websites/vukyweb/nas/
+
+Copy network-monitor.py and the systemd units separately as shown above.
+Preserve the NAS-side .htaccess, .htpasswd and data directory. Do not replace
+the existing authentication files or monitoring JSON files.
+
+Before replacing dashboard files, make a backup:
+
+  sudo cp -a /srv/nas/websites/vukyweb/nas /srv/nas/websites/vukyweb/nas.backup.$(date +%F-%H%M)
 
 CURRENT CONNECTION DETAILS
 --------------------------
-Local NAS IP:       192.168.100.7
-Tailscale IP:       100.76.132.23
-SSH user:           vuky
-NAS storage mount:  /srv/nas
+Local Wi-Fi IP:    192.168.100.13
+Wi-Fi interface:   wlxb4b024d5369f
+Ethernet:          enp0s25 (intentionally disabled)
+Gateway:           192.168.100.1
+Tailscale IPv4:    100.76.132.23
+MagicDNS:          nas.tail02ce4c.ts.net
+SSH user:          vuky
+Storage mount:     /srv/nas
 
-These IP addresses, service links and port bindings are reference information,
-not dynamically discovered network details. Update the HTML pages if they
-change. The port list is a snapshot of the supplied command output.
+REMOTE ACCESS MODEL
+-------------------
+Use Tailscale for private administration. The browser terminal is available at:
 
-SECURITY
---------
-Keep the dashboard protected by the existing NAS-side HTTP Basic Authentication.
-Do not expose administrative services or SMB directly to the public internet.
-Use Tailscale for private remote access. The dashboard links do not bypass each
-service's own authentication. HTTPS services may show a certificate warning if
-they use a self-signed certificate.
+  https://nas.tail02ce4c.ts.net:8443
 
-DESIGN
-------
-Near-black surfaces, white typography, fine outlines and restrained status
-colours. Responsive navigation and layouts support desktop, tablet and mobile.
-No external frameworks, fonts, scripts or CDNs are required.
+The public Funnel URL serves VukyWeb on port 8080:
+
+  https://nas.tail02ce4c.ts.net
+
+Keep the dashboard's existing HTTP Basic Authentication enabled. Do not expose
+SSH, SMB, Cockpit, Portainer, Transmission or ttyd directly to the public
+internet. Do not disable or reconfigure the existing Tailscale Funnel or Serve
+settings while deploying this dashboard.
+
+DESIGN AND COMPATIBILITY
+------------------------
+No external frameworks, fonts, scripts or CDNs are required. Layouts adapt to
+desktop, tablet and mobile widths. The dashboard uses semantic HTML, inline
+SVG line icons, accessible labels and reduced-motion support.
+
+The network page displays live values only when data/network.json exists and is
+fresh. Static IPs are shown as connection references, not falsely reported as
+live health checks.
