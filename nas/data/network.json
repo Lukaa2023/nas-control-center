@@ -1,0 +1,41 @@
+{
+  "updated_at": "2026-11-18T00:31:13.117533+00:00",
+  "interface": {
+    "name": "wlxb4b024d5369f",
+    "type": "Wi-Fi",
+    "state": "up",
+    "ipv4": "192.168.100.13",
+    "connection": "Soba_5G"
+  },
+  "speed": {
+    "download_mbps": 0.03,
+    "upload_mbps": 0.1
+  },
+  "tailscale_speed": {
+    "download_mbps": 0.0,
+    "upload_mbps": 0.0
+  },
+  "wifi": {
+    "ssid": "Soba_5G",
+    "signal_percent": 100
+  },
+  "gateway": {
+    "address": "192.168.100.1",
+    "interface": "wlxb4b024d5369f",
+    "reachable": true
+  },
+  "internet": {
+    "reachable": true,
+    "detail": "External HTTPS check succeeded"
+  },
+  "tailscale": {
+    "connected": true,
+    "ipv4": "100.76.132.23",
+    "dns_name": "nas.tail02ce4c.ts.net",
+    "state": "Running"
+  },
+  "ethernet": {
+    "name": "enp0s25",
+    "expected_state": "disabled"
+  }
+}

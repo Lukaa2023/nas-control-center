@@ -1,0 +1,46 @@
+{
+  "updated_at": "2026-11-18T00:29:21.166820+00:00",
+  "interval_seconds": 300,
+  "drives": {
+    "system": {
+      "label": "System Drive",
+      "device": "/dev/disk/by-id/ata-ST9160823AS_5NK0C5PQ",
+      "model": "ST9160823AS",
+      "serial": "5NK0C5PQ",
+      "capacity_bytes": 160041885696,
+      "smart_passed": true,
+      "temperature_c": 26,
+      "status": "watch",
+      "warnings": [
+        "High load-cycle count; monitor its growth"
+      ],
+      "critical_alerts": [],
+      "reallocated_sectors": 0,
+      "power_on_hours": 14258,
+      "reported_uncorrectable": 0,
+      "load_cycle_count": 279583,
+      "pending_sectors": 0,
+      "offline_uncorrectable": 0,
+      "udma_crc_errors": 0
+    },
+    "storage": {
+      "label": "NAS Storage",
+      "device": "/dev/disk/by-id/ata-ST380815AS_9RW3LYPZ",
+      "model": "ST380815AS",
+      "serial": "9RW3LYPZ",
+      "capacity_bytes": 80026361856,
+      "smart_passed": true,
+      "temperature_c": 32,
+      "status": "healthy",
+      "warnings": [],
+      "critical_alerts": [],
+      "reallocated_sectors": 0,
+      "power_on_hours": 43160,
+      "reported_uncorrectable": 0,
+      "load_cycle_count": null,
+      "pending_sectors": 0,
+      "offline_uncorrectable": 0,
+      "udma_crc_errors": 0
+    }
+  }
+}

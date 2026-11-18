@@ -1,0 +1,210 @@
+const $ = id => document.getElementById(id);
+function setText(id, value) { const el = $(id); if (el) el.textContent = value; }
+function setStatus(id, kind, message) {
+  const el = $(id); if (!el) return;
+  el.classList.remove('stale', 'error', 'good');
+  if (kind) el.classList.add(kind);
+  const label = el.querySelector('span');
+  if (label) label.textContent = message;
+}
+function percent(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 0;
+}
+function setBar(id, value) {
+  const el = $(id); if (!el) return;
+  const n = percent(value);
+  el.style.width = n + '%';
+  if (el.parentElement) el.parentElement.setAttribute('aria-valuenow', String(Math.round(n)));
+}
+function bytes(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 0) return '--';
+  if (!n) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.min(Math.floor(Math.log(n) / Math.log(1024)), 4);
+  return (n / 1024 ** i).toFixed(i >= 3 ? 1 : 0) + ' ' + units[i];
+}
+async function getJson(path) {
+  const response = await fetch(path + '?t=' + Date.now(), { cache: 'no-store' });
+  if (!response.ok) throw new Error('HTTP ' + response.status);
+  return response.json();
+}
+function formatTime(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 'Timestamp unavailable' : date.toLocaleTimeString();
+}
+function isFresh(value, maxAgeMs = 45000) {
+  const time = new Date(value).getTime();
+  return Number.isFinite(time) && Date.now() - time <= maxAgeMs && Date.now() >= time - 60000;
+}
+function setMiniStatus(id, kind, label) {
+  const el = $(id); if (!el) return;
+  el.classList.remove('good', 'warn', 'bad');
+  if (kind) el.classList.add(kind);
+  el.textContent = label;
+}
+
+document.addEventListener('click', async event => {
+  const button = event.target.closest('[data-copy]');
+  if (!button) return;
+  const value = button.getAttribute('data-copy') || '';
+  const original = button.textContent;
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(value);
+    } else {
+      const area = document.createElement('textarea');
+      area.value = value; area.readOnly = true;
+      area.style.position = 'fixed'; area.style.opacity = '0';
+      document.body.appendChild(area); area.select();
+      const ok = document.execCommand('copy'); area.remove();
+      if (!ok) throw new Error('Clipboard unavailable');
+    }
+    button.textContent = 'Copied';
+  } catch (error) {
+    console.warn('Copy failed', error);
+    button.textContent = 'Copy manually';
+  }
+  button.disabled = true;
+  window.setTimeout(() => { button.textContent = original; button.disabled = false; }, 1400);
+});
+
+async function updateNASStats() {
+  try {
+    const data = await getJson('data/stats.json');
+    if (!data || !data.cpu || !data.memory || !data.disk) throw new Error('Unexpected stats format');
+    const cpu = percent(data.cpu.usage_percent);
+    const ram = percent(data.memory.usage_percent);
+    const disk = percent(data.disk.usage_percent);
+    setText('cpu-value', cpu.toFixed(1) + '%'); setBar('cpu-bar', cpu);
+    const loads = [data.cpu.load_1m, data.cpu.load_5m, data.cpu.load_15m].map(v => Number(v).toFixed(2));
+    setText('cpu-load', 'Load average: ' + loads.join(' / '));
+    setText('memory-value', ram.toFixed(1) + '%'); setBar('memory-bar', ram);
+    setText('memory-detail', bytes(data.memory.used) + ' / ' + bytes(data.memory.total));
+    setText('disk-value', disk.toFixed(1) + '%'); setBar('disk-bar', disk);
+    setText('disk-detail', bytes(data.disk.used) + ' / ' + bytes(data.disk.total));
+    setText('uptime-value', data.uptime_human || '--');
+    setText('hostname-value', 'Host: ' + (data.hostname || 'NAS'));
+    setText('last-updated', 'Updated ' + formatTime(data.updated_at));
+    const fresh = isFresh(data.updated_at);
+    setStatus('system-status', fresh ? 'good' : 'stale', fresh ? 'System data live' : 'System data stale');
+  } catch (error) {
+    console.error('NAS monitoring error:', error);
+    setText('last-updated', 'Unable to load system metrics');
+    setStatus('system-status', 'error', 'Monitoring unavailable');
+  }
+}
+
+function updateNetworkFields(data) {
+  const wifi = data.wifi || {};
+  const tailscale = data.tailscale || {};
+  const gateway = data.gateway || {};
+  const internet = data.internet || {};
+  const linkUp = data.interface && data.interface.state === 'up';
+  setText('lan-address', data.interface?.ipv4 || 'Local IP unavailable');
+  setText('local-ip-display', data.interface?.ipv4 || 'Local IP unavailable');
+  setText('network-ip', data.interface?.ipv4 || '--');
+  setText('network-interface', (data.interface?.type || 'Network') + ' · ' + (data.interface?.name || 'interface unavailable'));
+  setText('network-interface-detail', data.interface?.connection || 'Connection details unavailable');
+  setText('network-route', 'Gateway: ' + (gateway.address || '--'));
+  setText('wifi-name', wifi.ssid ? 'Wi-Fi · ' + wifi.ssid : (data.interface?.type || 'Network') + ' connection');
+  setText('wifi-signal', wifi.signal_percent == null ? 'Signal --' : 'Signal ' + wifi.signal_percent + '%');
+  setText('network-signal', wifi.signal_percent == null ? '--' : wifi.signal_percent + '%');
+  setText('network-ssid', wifi.ssid || 'Wi-Fi signal not available');
+  setText('gateway-address', gateway.address || 'Gateway unavailable');
+  setText('gateway-health', gateway.reachable === true ? 'Reachable' : gateway.reachable === false ? 'Offline' : 'Unknown');
+  setText('internet-health', internet.reachable === true ? 'Online' : internet.reachable === false ? 'Offline' : 'Unknown');
+  setText('internet-detail', internet.detail || 'External connectivity check');
+  setText('tailscale-health', tailscale.connected === true ? 'Connected' : tailscale.connected === false ? 'Disconnected' : 'Unknown');
+  setText('tailscale-detail', tailscale.dns_name || tailscale.ipv4 || 'Private mesh connection');
+  setMiniStatus('lan-status', linkUp ? 'good' : 'bad', linkUp ? 'Connected' : 'Disconnected');
+  setMiniStatus('network-link-status', linkUp ? 'good' : 'bad', linkUp ? 'Connected' : 'Disconnected');
+  setMiniStatus('gateway-health', gateway.reachable === true ? 'good' : gateway.reachable === false ? 'bad' : 'warn', gateway.reachable === true ? 'Reachable' : gateway.reachable === false ? 'Offline' : 'Unknown');
+  setMiniStatus('internet-health', internet.reachable === true ? 'good' : internet.reachable === false ? 'bad' : 'warn', internet.reachable === true ? 'Online' : internet.reachable === false ? 'Offline' : 'Unknown');
+  setMiniStatus('tailscale-health', tailscale.connected === true ? 'good' : tailscale.connected === false ? 'bad' : 'warn', tailscale.connected === true ? 'Connected' : tailscale.connected === false ? 'Disconnected' : 'Unknown');
+  setMiniStatus('tailscale-status', tailscale.connected === true ? 'good' : tailscale.connected === false ? 'bad' : 'warn', tailscale.connected === true ? 'Connected' : tailscale.connected === false ? 'Disconnected' : 'Unknown');
+  setText('internet-status', internet.reachable === true ? 'Internet online' : internet.reachable === false ? 'Internet offline' : 'Internet unknown');
+}
+
+async function updateNetworkStats() {
+  const overall = $('network-overall-status');
+  const networkPage = !!overall;
+  try {
+    const data = await getJson('data/network.json');
+    if (!data || !data.updated_at) throw new Error('Unexpected network data format');
+    updateNetworkFields(data);
+    const fresh = isFresh(data.updated_at, 60000);
+    setText('network-updated', 'Updated ' + formatTime(data.updated_at));
+    setStatus('network-overall-status', fresh ? 'good' : 'stale', fresh ? 'Network monitor live' : 'Network data stale');
+    if (!fresh) {
+      setMiniStatus('network-link-status', 'warn', 'Data stale');
+      setMiniStatus('lan-status', 'warn', 'Data stale');
+      setMiniStatus('tailscale-status', 'warn', 'Data stale');
+      setMiniStatus('gateway-health', 'warn', 'Data stale');
+      setMiniStatus('internet-health', 'warn', 'Data stale');
+      setMiniStatus('tailscale-health', 'warn', 'Data stale');
+      setText('network-signal', 'Stale');
+      setText('internet-status', 'Network data stale');
+    }
+  } catch (error) {
+    console.warn('Network monitor unavailable:', error);
+    setText('network-updated', 'Network monitor not installed');
+    setStatus('network-overall-status', 'error', 'No live network data');
+    setMiniStatus('lan-status', 'warn', 'Not installed');
+    setMiniStatus('tailscale-status', 'warn', 'Not installed');
+    setMiniStatus('network-link-status', 'warn', 'Not installed');
+    setText('network-signal', '--'); setText('gateway-health', '--');
+    setText('internet-health', '--'); setText('tailscale-health', '--');
+    if (!networkPage) {
+      setText('wifi-name', 'Network monitor not installed');
+      setText('wifi-signal', 'Signal --');
+      setText('internet-status', 'Internet --');
+    }
+  }
+}
+
+async function updateDockerStats() {
+  const list = $('docker-container-list');
+  if (!list) return;
+  try {
+    const data = await getJson('data/docker.json');
+    if (!data || !Array.isArray(data.containers)) throw new Error('Unexpected Docker data format');
+    setText('docker-summary', `${data.running} running / ${data.stopped} stopped / ${data.total} total`);
+    const stamp = new Date(data.updated_at);
+    setText('docker-updated', Number.isNaN(stamp.getTime()) ? 'Timestamp unavailable' : 'Updated ' + stamp.toLocaleTimeString());
+    list.replaceChildren();
+    if (!data.containers.length) {
+      const empty = document.createElement('p'); empty.className = 'muted';
+      empty.textContent = 'No containers reported by Docker.'; list.appendChild(empty); return;
+    }
+    data.containers.forEach(container => {
+      const card = document.createElement('article'); card.className = 'docker-container';
+      const header = document.createElement('div'); header.className = 'docker-container-header';
+      const name = document.createElement('h4'); name.textContent = container.name || 'Unnamed container';
+      const running = container.state === 'running';
+      const state = document.createElement('span'); state.className = 'docker-state ' + (running ? 'running' : 'stopped');
+      state.textContent = String(container.state || 'unknown').toUpperCase();
+      const image = document.createElement('p'); image.textContent = 'Image: ' + (container.image || 'Unknown');
+      const status = document.createElement('p'); status.textContent = container.status || 'Status unavailable';
+      const ports = document.createElement('p'); ports.textContent = 'Ports: ' + (container.ports || 'None published');
+      const health = document.createElement('p'); health.textContent = 'Health check: ' + (!container.health || container.health === 'none' ? 'Not configured' : container.health);
+      header.append(name, state); card.append(header, image, status, ports, health); list.appendChild(card);
+    });
+  } catch (error) {
+    console.error('Docker monitoring error:', error);
+    setText('docker-updated', 'Unable to load Docker data');
+    const message = document.createElement('p'); message.className = 'muted';
+    message.textContent = 'Docker status is unavailable. Check that the NAS monitoring timer has generated data/docker.json.';
+    list.replaceChildren(message);
+  }
+}
+
+function updateClock() {
+  const el = $('local-clock');
+  if (el) el.textContent = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(new Date());
+}
+if ($('last-updated')) { updateNASStats(); window.setInterval(updateNASStats, 10000); }
+if ($('docker-container-list')) { updateDockerStats(); window.setInterval(updateDockerStats, 15000); }
+if ($('network-overall-status') || $('lan-status') || $('network-link-status')) { updateNetworkStats(); window.setInterval(updateNetworkStats, 15000); }
+if ($('local-clock')) { updateClock(); window.setInterval(updateClock, 30000); }

@@ -1,0 +1,78 @@
+{
+  "updated_at": "2026-11-18T00:31:13.225957+00:00",
+  "total": 7,
+  "running": 4,
+  "stopped": 3,
+  "containers": [
+    {
+      "name": "vukyweb-web",
+      "image": "vukyweb-php:1.0",
+      "state": "running",
+      "status": "Up 13 minutes",
+      "ports": "0.0.0.0:8080->80/tcp, [::]:8080->80/tcp",
+      "health": "none",
+      "health_source": "docker",
+      "id": "7753512639e6"
+    },
+    {
+      "name": "vukyweb-db",
+      "image": "mariadb:11",
+      "state": "running",
+      "status": "Up 13 minutes (healthy)",
+      "ports": "3306/tcp",
+      "health": "healthy",
+      "health_source": "docker",
+      "id": "6f0eda0c805a"
+    },
+    {
+      "name": "transmission",
+      "image": "lscr.io/linuxserver/transmission:latest",
+      "state": "running",
+      "status": "Up 13 minutes (healthy)",
+      "ports": "100.76.132.23:9091->9091/tcp, 51413/tcp, 51413/udp",
+      "health": "healthy",
+      "health_source": "docker",
+      "id": "be16f88a702c"
+    },
+    {
+      "name": "vukyweb-web-old",
+      "image": "vukyweb-php:1.0",
+      "state": "exited",
+      "status": "Exited (0) 31 hours ago",
+      "ports": "",
+      "health": "none",
+      "health_source": "docker",
+      "id": "942a6389988d"
+    },
+    {
+      "name": "vukyweb-db-old",
+      "image": "mariadb:11",
+      "state": "exited",
+      "status": "Exited (1) 31 hours ago",
+      "ports": "",
+      "health": "none",
+      "health_source": "docker",
+      "id": "168ad946d8d9"
+    },
+    {
+      "name": "portainer",
+      "image": "portainer/portainer-ce:lts",
+      "state": "running",
+      "status": "Up 13 minutes",
+      "ports": "8000/tcp, 9000/tcp, 0.0.0.0:9443->9443/tcp, [::]:9443->9443/tcp",
+      "health": "healthy",
+      "health_source": "portainer_api",
+      "id": "46462e452c8c"
+    },
+    {
+      "name": "friendly_murdock",
+      "image": "hello-world",
+      "state": "exited",
+      "status": "Exited (0) 2 days ago",
+      "ports": "",
+      "health": "none",
+      "health_source": "docker",
+      "id": "64b34c996eaa"
+    }
+  ]
+}

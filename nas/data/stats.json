@@ -1,0 +1,29 @@
+{
+  "hostname": "bigsause",
+  "updated_at": "2026-11-18T00:31:06.488386+00:00",
+  "uptime_seconds": 861,
+  "uptime_human": "14m",
+  "cpu": {
+    "usage_percent": 0.0,
+    "load_1m": 0.46,
+    "load_5m": 0.48,
+    "load_15m": 0.38
+  },
+  "memory": {
+    "total": 7650873344,
+    "used": 878821376,
+    "available": 6772051968,
+    "usage_percent": 11.5
+  },
+  "swap": {
+    "total": 4294963200,
+    "used": 0
+  },
+  "disk": {
+    "path": "/srv/nas",
+    "total": 78176350208,
+    "used": 4185464832,
+    "free": 69972848640,
+    "usage_percent": 5.4
+  }
+}

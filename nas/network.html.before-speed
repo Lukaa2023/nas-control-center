@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#080808"><title>Network · NAS Control Center</title><link rel="stylesheet" href="css/style.css"><script defer src="js/app.js"></script></head>
+<body><div class="shell">
+<aside class="sidebar">
+  <a class="brand" href="index.html"><span class="brand-mark">N<span></span></span><span>NAS Control Center<small>Vuky’s home server</small></span></a>
+  <nav class="nav" aria-label="Main navigation">
+    <a href="index.html"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1z"/></svg>Overview</a>
+    <a href="services.html"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01M11 7h6M11 17h6"/></svg>Services</a>
+    <a class="active" href="network.html" aria-current="page"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>Network</a>
+    <a href="ports.html"><svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3M14 3h7v7M21 3l-9 9"/></svg>Port reference</a>
+  </nav>
+  <div class="sidebar-note"><span class="eyebrow">NETWORK ROUTE</span><p>Wi-Fi is the active home connection. Ethernet is intentionally disabled.</p><a class="subtle-link" href="index.html">Back to overview ↗</a></div>
+  <div class="sidebar-footer"><span class="live-dot"></span> PRIVATE SERVER INTERFACE <span>·</span> V3.0</div>
+</aside>
+<main class="main">
+<header class="topbar"><div><span class="eyebrow">CONNECTIVITY <span class="slash">/</span> ROUTES</span><h1>Network</h1></div><span class="status-pill" id="network-overall-status"><i></i><span>Waiting for monitor</span></span></header>
+<div class="page-intro"><p>Your NAS has two ways to be reached: locally over the home Wi-Fi network, and privately from anywhere through Tailscale. These panels read a local snapshot generated on the NAS.</p></div>
+
+<section class="network-hero card">
+  <div><span class="eyebrow">ACTIVE INTERFACE</span><h2 id="network-interface">Wi-Fi · wlxb4b024d5369f</h2><p class="muted" id="network-interface-detail">TP-Link wireless adapter · DHCP reservation</p></div>
+  <div class="network-hero-status"><span class="mini-status" id="network-link-status">Awaiting data</span><strong id="network-ip">192.168.100.13</strong><small id="network-route">Gateway: --</small></div>
+</section>
+
+<section class="section-heading"><div><span class="eyebrow">LIVE STATUS</span><h2>Connection health</h2></div><span class="muted update-time" id="network-updated">Waiting for network.json…</span></section>
+<div class="grid four network-health-grid">
+  <article class="card health-card"><span class="health-label">WI-FI SIGNAL</span><strong id="network-signal">--</strong><small id="network-ssid">SSID unavailable</small></article>
+  <article class="card health-card"><span class="health-label">ROUTER / GATEWAY</span><strong id="gateway-health">--</strong><small id="gateway-address">192.168.100.1</small></article>
+  <article class="card health-card"><span class="health-label">INTERNET</span><strong id="internet-health">--</strong><small id="internet-detail">External connectivity check</small></article>
+  <article class="card health-card"><span class="health-label">TAILSCALE</span><strong id="tailscale-health">--</strong><small id="tailscale-detail">Private mesh connection</small></article>
+</div>
+
+<section class="section-heading"><div><span class="eyebrow">ACCESS METHODS</span><h2>Reach your NAS</h2></div></section>
+<div class="grid two">
+  <article class="card access-card"><div class="access-heading"><span class="icon-tile"><svg viewBox="0 0 24 24"><path d="M5 12.5a10 10 0 0 1 14 0M8 15.5a6 6 0 0 1 8 0M11 18.5a2 2 0 0 1 2 0"/></svg></span><span class="tag">AT HOME</span></div><h3>Local network</h3><p class="muted">Use this when your device is connected to the same router as the NAS.</p><div class="big-address" id="local-ip-display">192.168.100.13</div><button class="button button-light copy" data-copy="192.168.100.13">Copy local IP</button><ul class="clean-list"><li>SSH: <code>ssh vuky@192.168.100.13</code></li><li>Dashboard: <code>http://192.168.100.13:8080/nas/</code></li></ul></article>
+  <article class="card access-card"><div class="access-heading"><span class="icon-tile"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18"/></svg></span><span class="tag">FROM ANYWHERE</span></div><h3>Tailscale</h3><p class="muted">Connect your phone or computer to your tailnet first.</p><div class="big-address">100.76.132.23</div><button class="button button-light copy" data-copy="100.76.132.23">Copy Tailscale IP</button><ul class="clean-list"><li>MagicDNS: <code>nas.tail02ce4c.ts.net</code></li><li>SSH: <code>ssh vuky@nas.tail02ce4c.ts.net</code></li></ul></article>
+</div>
+
+<section class="section-heading"><div><span class="eyebrow">REMOTE ENDPOINTS</span><h2>Remote access map</h2></div></section>
+<div class="grid two">
+  <article class="card endpoint-card"><span class="tag">TAILNET ONLY</span><h3>Web terminal</h3><p class="muted">Private terminal session served through Tailscale Serve. It is not exposed through the public website.</p><a class="endpoint-url" href="https://nas.tail02ce4c.ts.net:8443" target="_blank" rel="noopener noreferrer">nas.tail02ce4c.ts.net:8443 ↗</a></article>
+  <article class="card endpoint-card"><span class="tag">PUBLIC WEBSITE</span><h3>VukyWeb · Funnel</h3><p class="muted">The public HTTPS endpoint serves the website on port 8080. Keep dashboard authentication enabled.</p><a class="endpoint-url" href="https://nas.tail02ce4c.ts.net" target="_blank" rel="noopener noreferrer">nas.tail02ce4c.ts.net ↗</a></article>
+</div>
+
+<section class="card content-card"><span class="eyebrow">CURRENT NETWORK DESIGN</span><h2>How the NAS is connected</h2>
+  <div class="topology">
+    <div class="topology-node"><span class="topology-icon"><svg viewBox="0 0 24 24"><path d="M2 9a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0M12 19h.01"/></svg></span><strong>Home router</strong><small>192.168.100.1</small></div>
+    <span class="topology-line"></span>
+    <div class="topology-node"><span class="topology-icon"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h3"/></svg></span><strong>NAS · Wi-Fi</strong><small>192.168.100.13</small></div>
+    <span class="topology-line"></span>
+    <div class="topology-node"><span class="topology-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18"/></svg></span><strong>Tailscale</strong><small>100.76.132.23</small></div>
+  </div>
+  <ul class="bullet-list"><li>Wi-Fi interface <code>wlxb4b024d5369f</code> is the active network route.</li><li>Ethernet interface <code>enp0s25</code> is intentionally disabled to avoid competing routes.</li><li>The router has a DHCP reservation for the Wi-Fi adapter, keeping the local address stable.</li><li>Your router WAN address was in the CGNAT range, so Tailscale is the appropriate private remote-access path. Do not expose SSH, SMB, Cockpit or Portainer with router port forwarding.</li></ul>
+</section>
+<section class="card content-card"><span class="eyebrow">QUICK DIAGNOSTICS</span><h2>Useful terminal commands</h2><p class="muted">Run these on the NAS when troubleshooting connectivity.</p>
+  <div class="command-row"><code>ip -br addr</code><button class="copy" data-copy="ip -br addr">Copy</button></div>
+  <div class="command-row"><code>ip route</code><button class="copy" data-copy="ip route">Copy</button></div>
+  <div class="command-row"><code>nmcli device status</code><button class="copy" data-copy="nmcli device status">Copy</button></div>
+  <div class="command-row"><code>tailscale status</code><button class="copy" data-copy="tailscale status">Copy</button></div>
+</section>
+<div class="notice"><span class="notice-icon">i</span><div><strong>Live data setup</strong><p>If the live cards say “Not installed” or “No data”, install the included <code>nas-network-monitor</code> service and timer using the steps in README.txt. The page never infers live status from the static IP values above.</p></div></div>
+<footer>NAS CONTROL CENTER <span>·</span> PRIVATE BY DESIGN <span>·</span> V3.0</footer>
+</main></div></body></html>
