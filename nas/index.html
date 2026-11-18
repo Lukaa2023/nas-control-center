@@ -47,6 +47,17 @@
       <article class="card metric-card metric-uptime"><div class="metric-head"><span class="metric-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="tag">UPTIME</span></div><h3 id="uptime-value">--</h3><p class="muted">Time since last boot</p><small id="hostname-value">Host: --</small></article>
     </div>
 
+    <section class="section-heading smart-section-heading">
+      <div><span class="eyebrow">DRIVE HEALTH / S.M.A.R.T.</span><h2>Disk health</h2></div>
+      <div class="smart-heading-meta">
+        <span class="status-pill" id="smart-overall-status"><i></i><span>Checking drives</span></span>
+        <span class="muted update-time" id="smart-updated">Waiting for data…</span>
+      </div>
+    </section>
+    <div class="grid smart-drive-grid" id="smart-drive-grid" aria-live="polite">
+      <p class="muted">Loading SMART telemetry…</p>
+    </div>
+
     <section class="section-heading"><div><span class="eyebrow">NETWORK / CONNECTIONS</span><h2>Connectivity</h2></div><a class="text-link" href="network.html">Full network details ↗</a></section>
     <div class="grid network-overview">
       <article class="card network-status-card"><div class="network-card-head"><span class="icon-tile"><svg viewBox="0 0 24 24"><path d="M5 12.5a10 10 0 0 1 14 0M8 15.5a6 6 0 0 1 8 0M11 18.5a2 2 0 0 1 2 0"/><path d="M12 21h.01"/></svg></span><span class="tag">WI-FI / LAN</span></div><div class="network-card-title"><h3>Home network</h3><span class="mini-status" id="lan-status">Awaiting data</span></div><div class="network-address" id="lan-address">192.168.100.13</div><div class="network-meta"><span id="wifi-name">Wi-Fi · Soba_5G</span><span id="wifi-signal">Signal --</span></div></article>
