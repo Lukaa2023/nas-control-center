@@ -96,6 +96,137 @@ async function updateNASStats() {
   }
 }
 
+function formatSmartNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n.toLocaleString() : '--';
+}
+
+function smartStatus(status) {
+  switch (String(status || '').toLowerCase()) {
+    case 'healthy': return { label: 'HEALTHY', className: 'healthy', overall: 'good' };
+    case 'watch': return { label: 'WATCH', className: 'watch', overall: 'stale' };
+    case 'warning': return { label: 'WARNING', className: 'warning', overall: 'stale' };
+    case 'critical': return { label: 'CRITICAL', className: 'critical', overall: 'error' };
+    default: return { label: 'UNKNOWN', className: 'unknown', overall: 'stale' };
+  }
+}
+
+function smartElement(tag, className, content) {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  if (content !== undefined && content !== null) element.textContent = String(content);
+  return element;
+}
+
+function addSmartStat(grid, label, value) {
+  const item = smartElement('div', 'smart-stat');
+  item.append(
+    smartElement('span', 'smart-stat-label', label),
+    smartElement('strong', 'smart-stat-value', value)
+  );
+  grid.appendChild(item);
+}
+
+function renderSmartDrive(drive) {
+  const status = smartStatus(drive.status);
+  const card = smartElement('article', 'card smart-drive-card status-' + status.className);
+  const header = smartElement('div', 'smart-drive-head');
+  const identity = smartElement('div', 'smart-drive-identity');
+  identity.append(
+    smartElement('span', 'eyebrow', drive.label || 'Disk'),
+    smartElement('h3', '', drive.model || 'Unknown model'),
+    smartElement('p', 'smart-drive-serial', 'Serial · ' + (drive.serial || 'Unavailable'))
+  );
+  header.append(identity, smartElement('span', 'smart-drive-status ' + status.className, status.label));
+  card.appendChild(header);
+
+  const temperature = smartElement('div', 'smart-drive-temperature');
+  const temperatureValue = drive.temperature_c == null ? '--' : formatSmartNumber(drive.temperature_c) + '°C';
+  temperature.append(
+    smartElement('strong', '', temperatureValue),
+    smartElement('span', '', 'Drive temperature')
+  );
+  card.appendChild(temperature);
+
+  const stats = smartElement('div', 'smart-drive-stats');
+  const powerHours = drive.power_on_hours == null
+    ? '--'
+    : formatSmartNumber(drive.power_on_hours) + ' h · ' + (Number(drive.power_on_hours) / 8760).toFixed(1) + ' years';
+  addSmartStat(stats, 'Capacity', bytes(drive.capacity_bytes));
+  addSmartStat(stats, 'Power-on time', powerHours);
+  addSmartStat(stats, 'SMART self-test', drive.smart_passed === true ? 'PASSED' : drive.smart_passed === false ? 'FAILED' : 'Unknown');
+  addSmartStat(stats, 'Reallocated sectors', formatSmartNumber(drive.reallocated_sectors));
+  addSmartStat(stats, 'Pending sectors', formatSmartNumber(drive.pending_sectors));
+  addSmartStat(stats, 'Offline uncorrectable', formatSmartNumber(drive.offline_uncorrectable));
+  addSmartStat(stats, 'Reported uncorrectable', formatSmartNumber(drive.reported_uncorrectable));
+  addSmartStat(stats, 'Interface CRC errors', formatSmartNumber(drive.udma_crc_errors));
+  if (drive.load_cycle_count !== null && drive.load_cycle_count !== undefined) {
+    addSmartStat(stats, 'Load cycles', formatSmartNumber(drive.load_cycle_count));
+  }
+  card.appendChild(stats);
+
+  const alerts = [
+    ...(Array.isArray(drive.critical_alerts) ? drive.critical_alerts.map(message => ({ type: 'critical', message })) : []),
+    ...(Array.isArray(drive.warnings) ? drive.warnings.map(message => ({ type: 'warning', message })) : [])
+  ];
+  const alertBox = smartElement('div', alerts.length ? 'smart-drive-alerts' : 'smart-drive-clear');
+  if (alerts.length) {
+    alerts.forEach(alert => {
+      const line = smartElement('p', 'smart-drive-alert ' + alert.type);
+      line.appendChild(smartElement('span', '', alert.type === 'critical' ? '!' : '•'));
+      line.appendChild(smartElement('span', '', alert.message));
+      alertBox.appendChild(line);
+    });
+  } else {
+    alertBox.textContent = 'No SMART warnings reported';
+  }
+  card.appendChild(alertBox);
+  return card;
+}
+
+async function updateSmartStats() {
+  const grid = $('smart-drive-grid');
+  if (!grid) return;
+
+  try {
+    const data = await getJson('data/smart.json');
+    if (!data || !data.drives || typeof data.drives !== 'object') {
+      throw new Error('Unexpected SMART data format');
+    }
+
+    const drives = Object.values(data.drives);
+    if (!drives.length) throw new Error('No drives reported');
+
+    grid.replaceChildren(...drives.map(renderSmartDrive));
+
+    const timestamp = new Date(data.updated_at);
+    const fresh = Number.isFinite(timestamp.getTime()) &&
+      Date.now() - timestamp.getTime() <= 15 * 60 * 1000 &&
+      Date.now() >= timestamp.getTime() - 60000;
+    setText('smart-updated', Number.isNaN(timestamp.getTime())
+      ? 'Timestamp unavailable'
+      : 'Checked ' + timestamp.toLocaleTimeString());
+
+    const states = drives.map(drive => smartStatus(drive.status));
+    const hasCritical = states.some(state => state.className === 'critical');
+    const hasWarning = states.some(state => ['watch', 'warning', 'unknown'].includes(state.className));
+    if (!fresh) {
+      setStatus('smart-overall-status', 'stale', 'SMART data stale');
+    } else if (hasCritical) {
+      setStatus('smart-overall-status', 'error', 'Drive health critical');
+    } else if (hasWarning) {
+      setStatus('smart-overall-status', 'stale', 'Drive needs attention');
+    } else {
+      setStatus('smart-overall-status', 'good', 'All drives healthy');
+    }
+  } catch (error) {
+    console.error('SMART monitoring error:', error);
+    setText('smart-updated', 'Unable to load disk health');
+    setStatus('smart-overall-status', 'error', 'SMART unavailable');
+    grid.replaceChildren(smartElement('p', 'muted', 'Disk health data is unavailable. Check the NAS SMART monitoring service.'));
+  }
+}
+
 function formatSpeed(value) {
   if (value == null || !Number.isFinite(Number(value)) || Number(value) < 0) return '--';
   return Number(value).toFixed(2) + ' Mbps';
@@ -296,6 +427,7 @@ function updateClock() {
   const el = $('local-clock');
   if (el) el.textContent = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(new Date());
 }
+if ($('smart-drive-grid')) { updateSmartStats(); window.setInterval(updateSmartStats, 60000); }
 if ($('last-updated')) { updateNASStats(); window.setInterval(updateNASStats, 10000); }
 if ($('docker-container-list')) { updateDockerStats(); window.setInterval(updateDockerStats, 15000); }
 if ($('network-overall-status') || $('lan-status') || $('network-link-status')) { updateNetworkStats(); window.setInterval(updateNetworkStats, 15000); }
